@@ -63,25 +63,19 @@ describe("Header", () => {
 // ─── CategoryFilter Unit Tests ───────────────────────────
 describe("CategoryFilter", () => {
   it("renders the Explore title", () => {
-    render(
-      <CategoryFilter activeCategory="All" onCategoryChange={() => {}} />,
-    );
+    render(<CategoryFilter activeCategory="All" onCategoryChange={() => {}} />);
     expect(screen.getByText("Explore")).toBeInTheDocument();
   });
 
   it("renders All, Men, Women filter pills", () => {
-    render(
-      <CategoryFilter activeCategory="All" onCategoryChange={() => {}} />,
-    );
+    render(<CategoryFilter activeCategory="All" onCategoryChange={() => {}} />);
     expect(screen.getByTestId("filter-all")).toBeInTheDocument();
     expect(screen.getByTestId("filter-men")).toBeInTheDocument();
     expect(screen.getByTestId("filter-women")).toBeInTheDocument();
   });
 
   it("highlights the active category", () => {
-    render(
-      <CategoryFilter activeCategory="Men" onCategoryChange={() => {}} />,
-    );
+    render(<CategoryFilter activeCategory="Men" onCategoryChange={() => {}} />);
     expect(screen.getByTestId("filter-men")).toHaveClass("filter-pill--active");
     expect(screen.getByTestId("filter-all")).not.toHaveClass(
       "filter-pill--active",

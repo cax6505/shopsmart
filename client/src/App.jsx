@@ -23,9 +23,7 @@ function App() {
   const filteredProducts =
     activeCategory === "All"
       ? products
-      : products.filter(
-          (p) => p.category === activeCategory.toLowerCase(),
-        );
+      : products.filter((p) => p.category === activeCategory.toLowerCase());
 
   return (
     <div className="app-layout" data-testid="app-layout">
