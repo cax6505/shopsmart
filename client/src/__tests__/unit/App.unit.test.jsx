@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import App from "../../App.jsx";
 import Sidebar from "../../components/Sidebar.jsx";
 import Header from "../../components/Header.jsx";
 import CategoryFilter from "../../components/CategoryFilter.jsx";

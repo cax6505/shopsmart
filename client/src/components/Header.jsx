@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 function Header({ orderCount, backendStatus }) {
   return (
     <header className="header" data-testid="header">
@@ -45,5 +47,10 @@ function Header({ orderCount, backendStatus }) {
     </header>
   );
 }
+
+Header.propTypes = {
+  orderCount: PropTypes.number.isRequired,
+  backendStatus: PropTypes.string,
+};
 
 export default Header;

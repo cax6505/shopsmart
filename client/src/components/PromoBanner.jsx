@@ -1,3 +1,5 @@
+import PropTypes from "prop-types";
+
 function PromoBanner({ variant }) {
   if (variant === "discount") {
     return (
@@ -45,5 +47,9 @@ function PromoBanner({ variant }) {
 
   return null;
 }
+
+PromoBanner.propTypes = {
+  variant: PropTypes.string.isRequired,
+};
 
 export default PromoBanner;

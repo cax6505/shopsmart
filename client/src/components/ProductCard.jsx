@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { useState } from "react";
 
 function ProductCard({ product }) {
@@ -50,5 +51,16 @@ function ProductCard({ product }) {
     </div>
   );
 }
+
+ProductCard.propTypes = {
+  product: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    name: PropTypes.string.isRequired,
+    image: PropTypes.string.isRequired,
+    colors: PropTypes.arrayOf(PropTypes.string),
+    badge: PropTypes.string,
+    price: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  }).isRequired,
+};
 
 export default ProductCard;

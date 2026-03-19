@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { navItems, recentOrders } from "../data/products";
 
 function Sidebar({ activeNav, onNavClick }) {
@@ -55,5 +56,10 @@ function Sidebar({ activeNav, onNavClick }) {
     </aside>
   );
 }
+
+Sidebar.propTypes = {
+  activeNav: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  onNavClick: PropTypes.func.isRequired,
+};
 
 export default Sidebar;

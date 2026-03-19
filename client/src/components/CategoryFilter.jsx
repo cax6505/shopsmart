@@ -1,3 +1,4 @@
+import PropTypes from "prop-types";
 import { categories } from "../data/products";
 
 function CategoryFilter({ activeCategory, onCategoryChange }) {
@@ -32,5 +33,10 @@ function CategoryFilter({ activeCategory, onCategoryChange }) {
     </div>
   );
 }
+
+CategoryFilter.propTypes = {
+  activeCategory: PropTypes.string.isRequired,
+  onCategoryChange: PropTypes.func.isRequired,
+};
 
 export default CategoryFilter;
