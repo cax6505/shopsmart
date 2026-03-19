@@ -58,7 +58,8 @@ function Sidebar({ activeNav, onNavClick }) {
 }
 
 Sidebar.propTypes = {
-  activeNav: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  activeNav: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+    .isRequired,
   onNavClick: PropTypes.func.isRequired,
 };
 
