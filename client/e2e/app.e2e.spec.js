@@ -16,8 +16,8 @@ test.describe("ShopSmart Ecommerce — E2E Tests", () => {
   });
 
   test("header displays search and cart", async ({ page }) => {
-    // Logo
-    await expect(page.getByRole('heading', { name: "shopsmart", exact: true })).toBeVisible();
+    // Logo - specify level 1 to avoid footer heading
+    await expect(page.getByRole('heading', { name: "shopsmart", level: 1, exact: true })).toBeVisible();
     
     // Search input
     const searchInput = page.getByPlaceholder("Search product or brand here...");
@@ -34,8 +34,8 @@ test.describe("ShopSmart Ecommerce — E2E Tests", () => {
   });
 
   test("categories section is visible", async ({ page }) => {
-    await expect(page.getByText("T-Shirt")).toBeVisible();
-    await expect(page.getByText("All Category").first()).toBeVisible();
+    await expect(page.getByText("T-Shirt").first()).toBeVisible();
+    await expect(page.getByText("All Category").nth(1)).toBeVisible();
   });
 
   test("flash sale section displays products", async ({ page }) => {

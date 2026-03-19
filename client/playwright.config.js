@@ -13,7 +13,7 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "html",
 
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: "http://localhost:5173/shopsmart/",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -25,11 +25,11 @@ export default defineConfig({
     },
   ],
 
-  /* Start the Vite dev server before running E2E tests
+  /* Start the Vite dev server before running E2E tests */
   webServer: {
     command: "npm run dev",
-    url: "http://localhost:5173",
+    url: "http://localhost:5173/shopsmart/",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-  }, */
+  },
 });
