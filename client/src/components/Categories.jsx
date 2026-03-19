@@ -1,14 +1,13 @@
-
 const categories = [
-  { name: 'T-Shirt', icon: '👕' },
-  { name: 'Jacket', icon: '🧥' },
-  { name: 'Shirt', icon: '👔' },
-  { name: 'Jeans', icon: '👖' },
-  { name: 'Bag', icon: '👜' },
-  { name: 'Shoes', icon: '👟' },
-  { name: 'Watches', icon: '⌚' },
-  { name: 'Cap', icon: '🧢' },
-  { name: 'All Category', icon: '⊞' },
+  { name: "T-Shirt", icon: "👕" },
+  { name: "Jacket", icon: "🧥" },
+  { name: "Shirt", icon: "👔" },
+  { name: "Jeans", icon: "👖" },
+  { name: "Bag", icon: "👜" },
+  { name: "Shoes", icon: "👟" },
+  { name: "Watches", icon: "⌚" },
+  { name: "Cap", icon: "🧢" },
+  { name: "All Category", icon: "⊞" },
 ];
 
 const Categories = () => {

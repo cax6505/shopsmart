@@ -25,11 +25,11 @@ export default defineConfig({
     },
   ],
 
-  /* Start the Vite dev server before running E2E tests */
+  /* Start the Vite dev server before running E2E tests
   webServer: {
     command: "npm run dev",
     url: "http://localhost:5173",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
-  },
+  }, */
 });

@@ -22,10 +22,10 @@ describe("App — Integration Tests", () => {
 
     // Flash Sale section
     expect(screen.getByText(/Flash Sale/i)).toBeInTheDocument();
-    
+
     // Todays For You section
     expect(screen.getByText(/Todays For You!/i)).toBeInTheDocument();
-    
+
     // Best Selling Store section
     expect(screen.getByText(/Best Selling Store/i)).toBeInTheDocument();
   });
