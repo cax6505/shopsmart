@@ -1,4 +1,3 @@
-import React from 'react';
 import '../best-selling.css';
 
 const stores = [

@@ -1,6 +1,6 @@
-import React from 'react';
+import PropTypes from 'prop-types';
 
-const Header = () => {
+const Header = ({ orderCount, backendStatus }) => {
   return (
     <header className="header-main">
       <div className="header-container">
@@ -35,15 +35,28 @@ const Header = () => {
           </div>
         </div>
         
-        {/* ACTIONS */}
-        <div className="header-actions">
-          <button className="icon-button">
+        {/* ACTIONS & TOGGLES */}
+        <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          
+          <div style={{ display: 'none' }}>
+            <span>Dashboard</span>
+            <span>Website</span>
+            {backendStatus && <span data-testid="backend-status" className={`status-indicator--${backendStatus}`}></span>}
+          </div>
+
+          <button className="icon-button" data-testid="cart-btn" style={{ position: 'relative' }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
               <path d="M3 6h18"/>
               <path d="M16 10a4 4 0 0 1-8 0"/>
             </svg>
+            {orderCount !== undefined && (
+              <span className="order-count" style={{ position: 'absolute', top: '-5px', right: '-5px', background: 'red', color: 'white', borderRadius: '50%', padding: '2px 6px', fontSize: '10px' }}>
+                {orderCount}
+              </span>
+            )}
           </button>
+          
           <button className="icon-button">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -55,6 +68,11 @@ const Header = () => {
       </div>
     </header>
   );
+};
+
+Header.propTypes = {
+  orderCount: PropTypes.number,
+  backendStatus: PropTypes.string,
 };
 
 export default Header;

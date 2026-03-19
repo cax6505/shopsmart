@@ -1,4 +1,3 @@
-import React from 'react';
 import '../footer.css';
 
 const Footer = () => {
@@ -7,7 +6,7 @@ const Footer = () => {
       <div className="banner-section">
         <div className="banner-overlay"></div>
         <div className="banner-content">
-          <h2>"Let's Shop Beyond Boundaries"</h2>
+          <h2>&quot;Let&apos;s Shop Beyond Boundaries&quot;</h2>
         </div>
       </div>
       <footer className="footer-main">
@@ -23,7 +22,7 @@ const Footer = () => {
               </div>
               <span className="logo-text">shopsmart</span>
             </div>
-            <p className="footer-tagline">"Let's Shop Beyond Boundaries"</p>
+            <p className="footer-tagline">&quot;Let&apos;s Shop Beyond Boundaries&quot;</p>
             <div className="social-icons">
               <button aria-label="Facebook">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
