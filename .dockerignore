@@ -1,0 +1,14 @@
+node_modules
+npm-debug.log
+dist
+.env
+.git
+.gitignore
+*.md
+Dockerfile
+.dockerignore
+client/node_modules
+server/node_modules
+client/dist
+playwright-report
+test-results
