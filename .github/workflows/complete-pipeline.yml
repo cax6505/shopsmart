@@ -248,18 +248,23 @@ jobs:
         run: terraform validate
 
       - name:  Terraform plan
-        run: terraform plan -out=tfplan -json > tfplan.json
-        continue-on-error: true
+        id: plan
+        run: terraform plan -out=tfplan
+
+      - name:  Export plan to JSON (for artifact)
+        if: always() && steps.plan.outcome != 'skipped'
+        run: terraform show -json tfplan > tfplan.json 2>/dev/null || echo '{"error":"plan failed"}' > tfplan.json
 
       - name:  Upload Terraform plan
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: terraform-plan
           path: terraform/tfplan.json
           retention-days: 7
 
       - name: Terraform apply
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && steps.plan.outcome == 'success'
         run: terraform apply -auto-approve tfplan
 
       - name:  Export Terraform outputs
