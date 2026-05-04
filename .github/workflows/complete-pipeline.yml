@@ -196,9 +196,9 @@ jobs:
           cat > terraform.tfvars <<EOF
           aws_region          = "${{ env.AWS_REGION }}"
           environment         = "${{ github.ref_name == 'main' && 'prod' || 'staging' }}"
-          s3_bucket_name      = "shopsmart-data-v2-${{ github.ref_name }}-${{ github.repository_owner }}"
-          ecr_repository_name = "shopsmart-app-v2"
-          ecs_cluster_name    = "shopsmart-cluster-v2-${{ github.ref_name }}"
+          s3_bucket_name      = "shopsmart-data-v3-${{ github.ref_name }}-${{ github.repository_owner }}"
+          ecr_repository_name = "shopsmart-app-v3"
+          ecs_cluster_name    = "shopsmart-cluster-v3-${{ github.ref_name }}"
           ecs_task_cpu        = 512
           ecs_task_memory     = 1024
           ecs_desired_count   = 2
@@ -209,10 +209,29 @@ jobs:
         run: terraform fmt -check -recursive
         continue-on-error: true
 
-      - name: 🔍 Terraform init
+      - name: 🪣 Setup Terraform State Backend
+        run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          STATE_BUCKET="shopsmart-tfstate-$OWNER_LOWER"
+          
+          if ! aws s3api head-bucket --bucket "$STATE_BUCKET" 2>/dev/null; then
+            aws s3api create-bucket --bucket "$STATE_BUCKET" --region ${{ env.AWS_REGION }}
+          fi
+          
+          cat <<EOF > backend.tf
+          terraform {
+            backend "s3" {
+              bucket = "$STATE_BUCKET"
+              key    = "terraform.tfstate"
+              region = "${{ env.AWS_REGION }}"
+            }
+          }
+          EOF
+
+      - name:  Terraform init
         run: terraform init
 
-      - name: ✔️ Terraform validate
+      - name:  Terraform validate
         run: terraform validate
 
       - name:  Terraform plan
@@ -251,7 +270,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════════════════
 
   build-and-push:
-    name: 🐳 Docker Build & Push to ECR
+    name:  Docker Build & Push to ECR
     runs-on: ubuntu-latest
     needs: terraform
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
@@ -286,7 +305,7 @@ jobs:
         id: image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: shopsmart-app-v2
+          ECR_REPOSITORY: shopsmart-app-v3
           IMAGE_TAG: ${{ github.sha }}
         run: |
           IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
@@ -311,7 +330,7 @@ jobs:
           
           echo " Dockerfile validation passed"
 
-      - name: 🏗️ Build Docker image
+      - name: Build Docker image
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -322,11 +341,11 @@ jobs:
           cache-to: type=registry,ref=${{ env.IMAGE_URI }}:buildcache,mode=max
           outputs: type=docker,dest=/tmp/image.tar
 
-      - name: 🔒 Scan Docker image for vulnerabilities
+      - name: Scan Docker image for vulnerabilities
         run: |
           docker load --input /tmp/image.tar
           # Optional: Use Trivy or similar for scanning
-          echo "🔍 Image scanning (implement your scanning tool here)"
+          echo " Image scanning (implement your scanning tool here)"
 
       - name:  Push image to Amazon ECR
         uses: docker/build-push-action@v4
@@ -372,7 +391,7 @@ jobs:
       - name:  Download task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition shopsmart-app-v2 \
+            --task-definition shopsmart-app-v3 \
             --query taskDefinition > task-definition.json
 
       - name:  Update task definition image
@@ -387,7 +406,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: shopsmart-service-v2
+          service: shopsmart-service-v3
           cluster: shopsmart-cluster-${{ github.ref_name }}
           wait-for-service-stability: true
 
@@ -395,7 +414,7 @@ jobs:
         run: |
           aws ecs describe-services \
             --cluster shopsmart-cluster-${{ github.ref_name }} \
-            --services shopsmart-service-v2 \
+            --services shopsmart-service-v3 \
             --query 'services[0].status' \
             --output text
 
@@ -403,7 +422,7 @@ jobs:
         run: |
           echo "ECS Deployment Completed" >> $GITHUB_STEP_SUMMARY
           echo "- Cluster: shopsmart-cluster-${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Service: shopsmart-service-v2" >> $GITHUB_STEP_SUMMARY
+          echo "- Service: shopsmart-service-v3" >> $GITHUB_STEP_SUMMARY
           echo "- Image: ${{ needs.build-and-push.outputs.image-uri }}:${{ needs.build-and-push.outputs.image-digest }}" >> $GITHUB_STEP_SUMMARY
 
 
@@ -433,7 +452,7 @@ jobs:
         id: ecs-endpoint
         run: |
           ALB_DNS=$(aws elbv2 describe-load-balancers \
-            --names shopsmart-alb-v2 \
+            --names shopsmart-alb-v3 \
             --query 'LoadBalancers[0].DNSName' \
             --output text 2>/dev/null || echo "N/A")
           echo "endpoint=http://$ALB_DNS" >> $GITHUB_OUTPUT

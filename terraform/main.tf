@@ -125,7 +125,7 @@ data "aws_iam_role" "lab_role" {
 
 # CloudWatch Log Group for ECS
 resource "aws_cloudwatch_log_group" "ecs_logs" {
-  name              = "/ecs/shopsmart-v2"
+  name              = "/ecs/shopsmart-v3"
   retention_in_days = 30
 
   tags = {
@@ -162,7 +162,7 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
 
 # ECS Task Definition
 resource "aws_ecs_task_definition" "app" {
-  family                   = "shopsmart-app-v2"
+  family                   = "shopsmart-app-v3"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.ecs_task_cpu
@@ -276,7 +276,7 @@ resource "aws_security_group" "ecs_tasks" {
 
 # Application Load Balancer
 resource "aws_lb" "main" {
-  name               = "shopsmart-alb-v2"
+  name               = "shopsmart-alb-v3"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -291,7 +291,7 @@ resource "aws_lb" "main" {
 
 # Target Group
 resource "aws_lb_target_group" "app" {
-  name        = "shopsmart-tg-v2"
+  name        = "shopsmart-tg-v3"
   port        = 5001
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.default.id
@@ -325,7 +325,7 @@ resource "aws_lb_listener" "app" {
 
 # ECS Service
 resource "aws_ecs_service" "app" {
-  name            = "shopsmart-service-v2"
+  name            = "shopsmart-service-v3"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.ecs_desired_count
@@ -363,7 +363,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 
 # Auto Scaling Policy - CPU
 resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
-  name               = "shopsmart-cpu-scaling-v2"
+  name               = "shopsmart-cpu-scaling-v3"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
@@ -379,7 +379,7 @@ resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
 
 # Auto Scaling Policy - Memory
 resource "aws_appautoscaling_policy" "ecs_policy_memory" {
-  name               = "shopsmart-memory-scaling-v2"
+  name               = "shopsmart-memory-scaling-v3"
   policy_type        = "TargetTrackingScaling"
   resource_id        = aws_appautoscaling_target.ecs_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
