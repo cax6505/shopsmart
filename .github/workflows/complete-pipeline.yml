@@ -23,7 +23,6 @@ on:
         default: true
 
 env:
-  AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -184,7 +183,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
+
+      - name: 🔍 Verify AWS Identity
+        run: aws sts get-caller-identity
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -194,7 +196,7 @@ jobs:
       - name:  Create terraform.tfvars
         run: |
           cat > terraform.tfvars <<EOF
-          aws_region          = "${{ env.AWS_REGION }}"
+          aws_region          = "us-east-1"
           environment         = "${{ github.ref_name == 'main' && 'prod' || 'staging' }}"
           s3_bucket_name      = "shopsmart-data-v4-${{ github.ref_name }}-${{ github.repository_owner }}"
           ecr_repository_name = "shopsmart-app-v4"
@@ -224,7 +226,7 @@ jobs:
             backend "s3" {
               bucket = "$STATE_BUCKET"
               key    = "terraform.tfstate"
-              region = "${{ env.AWS_REGION }}"
+              region = "us-east-1"
             }
           }
           EOF
@@ -296,7 +298,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name:  Login to Amazon ECR
         id: login-ecr
@@ -387,7 +389,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name:  Download task definition
         run: |
