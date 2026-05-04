@@ -44,7 +44,8 @@ data "aws_subnets" "default" {
 
 # S3 Bucket for Application Data
 resource "aws_s3_bucket" "app_data" {
-  bucket = var.s3_bucket_name
+  bucket        = var.s3_bucket_name
+  force_destroy = true
 
   tags = {
     Name = "ShopSmart Application Data"
@@ -85,6 +86,7 @@ resource "aws_s3_bucket_public_access_block" "app_data_pab" {
 resource "aws_ecr_repository" "app" {
   name                 = var.ecr_repository_name
   image_tag_mutability = "MUTABLE"
+  force_delete         = true
 
   image_scanning_configuration {
     scan_on_push = true
