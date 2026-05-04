@@ -118,94 +118,9 @@ resource "aws_ecr_lifecycle_policy" "app" {
   })
 }
 
-# IAM Role for ECS Task Execution
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "shopsmart-ecs-task-execution-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name = "ShopSmart ECS Task Execution Role"
-  }
-}
-
-# Attach policy to ECS task execution role
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
-# Custom policy for S3 and ECR access
-resource "aws_iam_role_policy" "ecs_task_policy" {
-  name = "shopsmart-ecs-task-policy"
-  role = aws_iam_role.ecs_task_execution_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket"
-        ]
-        Resource = [
-          aws_s3_bucket.app_data.arn,
-          "${aws_s3_bucket.app_data.arn}/*"
-        ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ecr:GetAuthorizationToken"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Resource = "arn:aws:logs:*:*:*"
-      }
-    ]
-  })
-}
-
-# IAM Role for ECS Task (application runtime)
-resource "aws_iam_role" "ecs_task_role" {
-  name = "shopsmart-ecs-task-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name = "ShopSmart ECS Application Role"
-  }
+# Fetch the existing LabRole for AWS Academy/Vocareum environments
+data "aws_iam_role" "lab_role" {
+  name = "LabRole"
 }
 
 # CloudWatch Log Group for ECS
@@ -252,8 +167,8 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.ecs_task_cpu
   memory                   = var.ecs_task_memory
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
-  task_role_arn            = aws_iam_role.ecs_task_role.arn
+  execution_role_arn       = data.aws_iam_role.lab_role.arn
+  task_role_arn            = data.aws_iam_role.lab_role.arn
 
   container_definitions = jsonencode([
     {
@@ -304,7 +219,7 @@ resource "aws_ecs_task_definition" "app" {
 
 # Security Group for ALB
 resource "aws_security_group" "alb" {
-  name        = "shopsmart-alb-sg"
+  name_prefix = "shopsmart-alb-sg-"
   description = "Security group for ShopSmart ALB"
   vpc_id      = data.aws_vpc.default.id
 
@@ -336,7 +251,7 @@ resource "aws_security_group" "alb" {
 
 # Security Group for ECS Tasks
 resource "aws_security_group" "ecs_tasks" {
-  name        = "shopsmart-ecs-tasks-sg"
+  name_prefix = "shopsmart-ecs-tasks-sg-"
   description = "Security group for ShopSmart ECS tasks"
   vpc_id      = data.aws_vpc.default.id
 
@@ -429,8 +344,7 @@ resource "aws_ecs_service" "app" {
   }
 
   depends_on = [
-    aws_lb_listener.app,
-    aws_iam_role_policy.ecs_task_policy
+    aws_lb_listener.app
   ]
 
   tags = {
