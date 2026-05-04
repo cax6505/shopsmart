@@ -196,9 +196,9 @@ jobs:
           cat > terraform.tfvars <<EOF
           aws_region          = "${{ env.AWS_REGION }}"
           environment         = "${{ github.ref_name == 'main' && 'prod' || 'staging' }}"
-          s3_bucket_name      = "shopsmart-data-v3-${{ github.ref_name }}-${{ github.repository_owner }}"
-          ecr_repository_name = "shopsmart-app-v3"
-          ecs_cluster_name    = "shopsmart-cluster-v3-${{ github.ref_name }}"
+          s3_bucket_name      = "shopsmart-data-v4-${{ github.ref_name }}-${{ github.repository_owner }}"
+          ecr_repository_name = "shopsmart-app-v4"
+          ecs_cluster_name    = "shopsmart-cluster-v4-${{ github.ref_name }}"
           ecs_task_cpu        = 512
           ecs_task_memory     = 1024
           ecs_desired_count   = 2
@@ -305,7 +305,7 @@ jobs:
         id: image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: shopsmart-app-v3
+          ECR_REPOSITORY: shopsmart-app-v4
           IMAGE_TAG: ${{ github.sha }}
         run: |
           IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
@@ -391,7 +391,7 @@ jobs:
       - name:  Download task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition shopsmart-app-v3 \
+            --task-definition shopsmart-app-v4 \
             --query taskDefinition > task-definition.json
 
       - name:  Update task definition image
@@ -406,23 +406,23 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: shopsmart-service-v3
-          cluster: shopsmart-cluster-v3-${{ github.ref_name }}
+          service: shopsmart-service-v4
+          cluster: shopsmart-cluster-v4-${{ github.ref_name }}
           wait-for-service-stability: true
 
       - name:  Verify ECS service
         run: |
           aws ecs describe-services \
-            --cluster shopsmart-cluster-v3-${{ github.ref_name }} \
-            --services shopsmart-service-v3 \
+            --cluster shopsmart-cluster-v4-${{ github.ref_name }} \
+            --services shopsmart-service-v4 \
             --query 'services[0].status' \
             --output text
 
       - name:  ECS deployment summary
         run: |
           echo "ECS Deployment Completed" >> $GITHUB_STEP_SUMMARY
-          echo "- Cluster: shopsmart-cluster-v3-${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Service: shopsmart-service-v3" >> $GITHUB_STEP_SUMMARY
+          echo "- Cluster: shopsmart-cluster-v4-${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Service: shopsmart-service-v4" >> $GITHUB_STEP_SUMMARY
           echo "- Image: ${{ needs.build-and-push.outputs.image-uri }}:${{ needs.build-and-push.outputs.image-digest }}" >> $GITHUB_STEP_SUMMARY
 
 
