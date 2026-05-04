@@ -120,9 +120,12 @@ resource "aws_ecr_lifecycle_policy" "app" {
   })
 }
 
-# Fetch the existing LabRole for AWS Academy/Vocareum environments
-data "aws_iam_role" "lab_role" {
-  name = "LabRole"
+# Get current AWS account ID (sts:GetCallerIdentity cannot be denied)
+data "aws_caller_identity" "current" {}
+
+# Construct LabRole ARN without requiring iam:GetRole permission
+locals {
+  lab_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/LabRole"
 }
 
 # CloudWatch Log Group for ECS
@@ -169,8 +172,8 @@ resource "aws_ecs_task_definition" "app" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.ecs_task_cpu
   memory                   = var.ecs_task_memory
-  execution_role_arn       = data.aws_iam_role.lab_role.arn
-  task_role_arn            = data.aws_iam_role.lab_role.arn
+  execution_role_arn       = local.lab_role_arn
+  task_role_arn            = local.lab_role_arn
 
   container_definitions = jsonencode([
     {
