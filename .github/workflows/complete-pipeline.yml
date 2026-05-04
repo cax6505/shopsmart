@@ -244,6 +244,20 @@ jobs:
       - name:  Terraform init
         run: terraform init
 
+      - name: 🧹 Cleanup orphaned resources from old versions
+        run: |
+          # Force-delete old ECR repositories that may still have images
+          for repo in shopsmart-app-v1 shopsmart-app-v2 shopsmart-app-v3; do
+            echo "Cleaning up $repo..."
+            aws ecr delete-repository --repository-name "$repo" --force 2>/dev/null && \
+              echo "✅ Deleted $repo" || echo "⏭️ $repo not found or already deleted"
+          done
+
+          # Remove any orphaned resources from Terraform state
+          terraform state rm aws_ecr_repository.app 2>/dev/null || true
+          terraform state rm aws_ecr_lifecycle_policy.app 2>/dev/null || true
+        continue-on-error: true
+
       - name:  Terraform validate
         run: terraform validate
 
