@@ -203,7 +203,7 @@ resource "aws_ecs_task_definition" "app" {
 
       # Health check
       healthCheck = {
-        command     = ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5001/api/health || exit 1"]
+        command     = ["CMD-SHELL", "curl -f http://localhost:5001/api/health || exit 1"]
         interval    = 30
         timeout     = 5
         retries     = 3

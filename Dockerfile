@@ -39,12 +39,15 @@ ENV PORT=5001
 # Expose the application port
 EXPOSE 5001
 
+# Install curl for health checks
+RUN apk add --no-cache curl
+
 # Switch to non-root user
 USER appuser
 
 # Configure healthcheck — polls /api/health every 30s
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:5001/api/health || exit 1
+  CMD curl -f http://localhost:5001/api/health || exit 1
 
 # Start the application
 CMD ["node", "src/index.js"]
