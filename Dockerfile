@@ -1,34 +1,55 @@
 # ──────────────────────────────────────────────────────────────
-# Stage 1: Build — install production dependencies
+# Stage 1: Frontend Build
 # ──────────────────────────────────────────────────────────────
-FROM node:18-alpine AS builder
+FROM node:18-alpine AS frontend-builder
 
-WORKDIR /app
+WORKDIR /app/client
 
-# Copy dependency manifests first for better layer caching
+# Copy frontend dependency manifests
+COPY client/package.json client/package-lock.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source code
+COPY client/ ./
+
+# Build the frontend
+RUN npm run build
+
+# ──────────────────────────────────────────────────────────────
+# Stage 2: Backend Build — install production dependencies
+# ──────────────────────────────────────────────────────────────
+FROM node:18-alpine AS backend-builder
+
+WORKDIR /app/server
+
+# Copy backend dependency manifests
 COPY server/package.json server/package-lock.json ./
 
 # Install only production dependencies
 RUN npm ci --only=production
 
 # ──────────────────────────────────────────────────────────────
-# Stage 2: Production — minimal runtime image
+# Stage 3: Production — minimal runtime image
 # ──────────────────────────────────────────────────────────────
 FROM node:18-alpine AS production
 
-# Add labels for traceability
-LABEL maintainer="shopsmart-team"
-LABEL description="ShopSmart Backend API Service"
-
 WORKDIR /app
+
+# Install curl for health checks
+RUN apk add --no-cache curl
 
 # Create a non-root user and group
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Copy production node_modules from builder stage
-COPY --from=builder /app/node_modules ./node_modules
+# Copy production node_modules from backend-builder
+COPY --from=backend-builder /app/server/node_modules ./node_modules
 
-# Copy application source code
+# Copy built frontend from frontend-builder to public/
+COPY --from=frontend-builder /app/client/dist ./public
+
+# Copy backend source code
 COPY server/package.json ./
 COPY server/src ./src
 
@@ -38,9 +59,6 @@ ENV PORT=5001
 
 # Expose the application port
 EXPOSE 5001
-
-# Install curl for health checks
-RUN apk add --no-cache curl
 
 # Switch to non-root user
 USER appuser
