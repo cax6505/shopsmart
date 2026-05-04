@@ -1,44 +1,50 @@
-# Stage 1: Build the frontend
-FROM node:20-slim AS frontend-builder
-WORKDIR /app/client
-COPY client/package*.json ./
-RUN npm install
-COPY client/ ./
-RUN npm run build
+# ──────────────────────────────────────────────────────────────
+# Stage 1: Build — install production dependencies
+# ──────────────────────────────────────────────────────────────
+FROM node:18-alpine AS builder
 
-# Stage 2: Build the backend and combine
-FROM node:20-slim
 WORKDIR /app
 
-# Set environment to production
-ENV NODE_ENV=production
+# Copy dependency manifests first for better layer caching
+COPY server/package.json server/package-lock.json ./
 
-# Create a non-root user
-RUN groupadd -r appuser && useradd -r -g appuser -m appuser
+# Install only production dependencies
+RUN npm ci --only=production
 
-# Copy backend package.json and install production dependencies
-COPY server/package*.json ./server/
-WORKDIR /app/server
-RUN npm install --omit=dev
+# ──────────────────────────────────────────────────────────────
+# Stage 2: Production — minimal runtime image
+# ──────────────────────────────────────────────────────────────
+FROM node:18-alpine AS production
 
-# Copy backend source code
+# Add labels for traceability
+LABEL maintainer="shopsmart-team"
+LABEL description="ShopSmart Backend API Service"
+
+WORKDIR /app
+
+# Create a non-root user and group
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Copy production node_modules from builder stage
+COPY --from=builder /app/node_modules ./node_modules
+
+# Copy application source code
+COPY server/package.json ./
 COPY server/src ./src
 
-# Copy frontend build from Stage 1 to backend's public directory
-COPY --from=frontend-builder /app/client/dist ./public
+# Set environment variables
+ENV NODE_ENV=production
+ENV PORT=5001
 
-# Change ownership to non-root user
-RUN chown -R appuser:appuser /app
+# Expose the application port
+EXPOSE 5001
 
 # Switch to non-root user
 USER appuser
 
-# Expose the port the app runs on
-EXPOSE 5001
-
-# Healthcheck to verify the app is running
+# Configure healthcheck — polls /api/health every 30s
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD node -e "const http = require('http'); const options = { hostname: 'localhost', port: 5001, path: '/api/health', timeout: 2000 }; const req = http.request(options, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on('error', () => process.exit(1)); req.end();"
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5001/api/health || exit 1
 
 # Start the application
-CMD ["npm", "start"]
+CMD ["node", "src/index.js"]

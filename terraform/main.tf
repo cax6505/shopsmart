@@ -25,7 +25,6 @@ provider "aws" {
       Project     = "ShopSmart"
       Environment = var.environment
       ManagedBy   = "Terraform"
-      CreatedAt   = timestamp()
     }
   }
 }
