@@ -1,0 +1,5 @@
+{
+  "testEnvironment": "node",
+  "testMatch": ["**/tests/**/*.test.js"],
+  "reporters": ["default", "jest-junit"]
+}
