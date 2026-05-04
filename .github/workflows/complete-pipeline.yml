@@ -178,19 +178,24 @@ jobs:
       - name:  Checkout code
         uses: actions/checkout@v4
 
-      - name:  Debug Credentials (Check for newlines/spaces)
+      - name:  Sanitize & Configure AWS credentials
         run: |
-          if [[ "${{ secrets.AWS_ACCESS_KEY_ID }}" == *" "* ]]; then echo "⚠️ WARNING: AWS_ACCESS_KEY_ID contains spaces"; fi
-          if [[ "${{ secrets.AWS_SECRET_ACCESS_KEY }}" == *" "* ]]; then echo "⚠️ WARNING: AWS_SECRET_ACCESS_KEY contains spaces"; fi
-          if [[ "${{ secrets.AWS_SESSION_TOKEN }}" == *" "* ]]; then echo "⚠️ WARNING: AWS_SESSION_TOKEN contains spaces"; fi
-
-      - name:  Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+          # Remove all whitespace, newlines, and carriage returns from secrets
+          CLEAN_KEY=$(echo "${{ secrets.AWS_ACCESS_KEY_ID }}" | sed 's/[[:space:]]//g')
+          CLEAN_SECRET=$(echo "${{ secrets.AWS_SECRET_ACCESS_KEY }}" | sed 's/[[:space:]]//g')
+          CLEAN_TOKEN=$(echo "${{ secrets.AWS_SESSION_TOKEN }}" | sed 's/[[:space:]]//g')
+          
+          # Export to GITHUB_ENV for use in all subsequent steps
+          echo "AWS_ACCESS_KEY_ID=$CLEAN_KEY" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$CLEAN_SECRET" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$CLEAN_TOKEN" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
+          echo "AWS_REGION=us-east-1" >> $GITHUB_ENV
+          
+          # Mask the cleaned values just in case they differ from the original masked secrets
+          echo "::add-mask::$CLEAN_KEY"
+          echo "::add-mask::$CLEAN_SECRET"
+          echo "::add-mask::$CLEAN_TOKEN"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
@@ -296,13 +301,19 @@ jobs:
       - name:  Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name:  Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+      - name: 🔐 Sanitize & Configure AWS credentials
+        run: |
+          CLEAN_KEY=$(echo "${{ secrets.AWS_ACCESS_KEY_ID }}" | sed 's/[[:space:]]//g')
+          CLEAN_SECRET=$(echo "${{ secrets.AWS_SECRET_ACCESS_KEY }}" | sed 's/[[:space:]]//g')
+          CLEAN_TOKEN=$(echo "${{ secrets.AWS_SESSION_TOKEN }}" | sed 's/[[:space:]]//g')
+          echo "AWS_ACCESS_KEY_ID=$CLEAN_KEY" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$CLEAN_SECRET" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$CLEAN_TOKEN" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
+          echo "AWS_REGION=us-east-1" >> $GITHUB_ENV
+          echo "::add-mask::$CLEAN_KEY"
+          echo "::add-mask::$CLEAN_SECRET"
+          echo "::add-mask::$CLEAN_TOKEN"
 
       - name:  Login to Amazon ECR
         id: login-ecr
@@ -387,13 +398,19 @@ jobs:
       - name:  Checkout code
         uses: actions/checkout@v4
 
-      - name:  Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+      - name: 🔐 Sanitize & Configure AWS credentials
+        run: |
+          CLEAN_KEY=$(echo "${{ secrets.AWS_ACCESS_KEY_ID }}" | sed 's/[[:space:]]//g')
+          CLEAN_SECRET=$(echo "${{ secrets.AWS_SECRET_ACCESS_KEY }}" | sed 's/[[:space:]]//g')
+          CLEAN_TOKEN=$(echo "${{ secrets.AWS_SESSION_TOKEN }}" | sed 's/[[:space:]]//g')
+          echo "AWS_ACCESS_KEY_ID=$CLEAN_KEY" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$CLEAN_SECRET" >> $GITHUB_ENV
+          echo "AWS_SESSION_TOKEN=$CLEAN_TOKEN" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
+          echo "AWS_REGION=us-east-1" >> $GITHUB_ENV
+          echo "::add-mask::$CLEAN_KEY"
+          echo "::add-mask::$CLEAN_SECRET"
+          echo "::add-mask::$CLEAN_TOKEN"
 
       - name:  Download task definition
         run: |
