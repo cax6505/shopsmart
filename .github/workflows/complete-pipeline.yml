@@ -195,10 +195,11 @@ jobs:
 
       - name:  Create terraform.tfvars
         run: |
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           cat > terraform.tfvars <<EOF
           aws_region          = "us-east-1"
           environment         = "${{ github.ref_name == 'main' && 'prod' || 'staging' }}"
-          s3_bucket_name      = "shopsmart-data-v4-${{ github.ref_name }}-${{ github.repository_owner }}"
+          s3_bucket_name      = "shopsmart-data-v4-${{ github.ref_name }}-${OWNER_LOWER}"
           ecr_repository_name = "shopsmart-app-v4"
           ecs_cluster_name    = "shopsmart-cluster-v4-${{ github.ref_name }}"
           ecs_task_cpu        = 512
@@ -215,7 +216,7 @@ jobs:
         run: |
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           STATE_BUCKET="shopsmart-tfstate-$OWNER_LOWER"
-          
+
           # Try to create the bucket, but don't fail the whole job if it's denied
           if aws s3api head-bucket --bucket "$STATE_BUCKET" 2>/dev/null; then
             echo "✅ Remote state bucket exists."
@@ -227,17 +228,17 @@ jobs:
             echo "⚠️ WARNING: Access Denied to S3 bucket creation. Falling back to LOCAL state."
             USE_REMOTE=false
           fi
-          
+
           if [ "$USE_REMOTE" = "true" ]; then
-            cat <<EOF > backend.tf
-            terraform {
-              backend "s3" {
-                bucket = "$STATE_BUCKET"
-                key    = "terraform.tfstate"
-                region = "us-east-1"
-              }
+          cat > backend.tf <<EOF
+          terraform {
+            backend "s3" {
+              bucket = "$STATE_BUCKET"
+              key    = "terraform.tfstate"
+              region = "us-east-1"
             }
-            EOF
+          }
+          EOF
           fi
 
       - name:  Terraform init
@@ -458,7 +459,7 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: us-east-1
 
       - name: Get ALB endpoint (ECS)
         id: ecs-endpoint
