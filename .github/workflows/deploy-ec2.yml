@@ -1,7 +1,7 @@
 name: Deploy to EC2
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
   # push:
   #   branches:
   #     - main
@@ -9,10 +9,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
+    steps:
       - name: Deploy to EC2 Server
         uses: appleboy/ssh-action@master
         with:
@@ -20,11 +18,22 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /path/to/project
+            cd ~/shopsmart
+
+            echo "Pulling latest code..."
             git pull origin main
+
+            echo "Starting backend..."
             cd server
             npm install
-            pm2 restart server
+            pm2 restart server || pm2 start src/app.js --name server
+
+            echo "Building frontend..."
             cd ../client
             npm install
             npm run build
+
+            echo "Restarting nginx..."
+            sudo systemctl restart nginx
+
+            echo "Deploy complete"
