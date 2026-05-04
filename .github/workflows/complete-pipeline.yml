@@ -196,9 +196,9 @@ jobs:
           cat > terraform.tfvars <<EOF
           aws_region          = "${{ env.AWS_REGION }}"
           environment         = "${{ github.ref_name == 'main' && 'prod' || 'staging' }}"
-          s3_bucket_name      = "shopsmart-app-data-${{ github.ref_name }}-${{ github.repository_owner }}"
-          ecr_repository_name = "shopsmart-app"
-          ecs_cluster_name    = "shopsmart-cluster-${{ github.ref_name }}"
+          s3_bucket_name      = "shopsmart-data-v2-${{ github.ref_name }}-${{ github.repository_owner }}"
+          ecr_repository_name = "shopsmart-app-v2"
+          ecs_cluster_name    = "shopsmart-cluster-v2-${{ github.ref_name }}"
           ecs_task_cpu        = 512
           ecs_task_memory     = 1024
           ecs_desired_count   = 2
@@ -215,22 +215,22 @@ jobs:
       - name: ✔️ Terraform validate
         run: terraform validate
 
-      - name: 📊 Terraform plan
+      - name:  Terraform plan
         run: terraform plan -out=tfplan -json > tfplan.json
         continue-on-error: true
 
-      - name: 💾 Upload Terraform plan
+      - name:  Upload Terraform plan
         uses: actions/upload-artifact@v4
         with:
           name: terraform-plan
           path: terraform/tfplan.json
           retention-days: 7
 
-      - name: 🚀 Terraform apply
+      - name: Terraform apply
         if: github.event_name == 'push'
         run: terraform apply -auto-approve tfplan
 
-      - name: 📤 Export Terraform outputs
+      - name:  Export Terraform outputs
         if: github.event_name == 'push'
         run: |
           terraform output -json > outputs.json
@@ -284,7 +284,7 @@ jobs:
         id: image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: shopsmart-app
+          ECR_REPOSITORY: shopsmart-app-v2
           IMAGE_TAG: ${{ github.sha }}
         run: |
           IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY
@@ -356,10 +356,10 @@ jobs:
       id-token: write
 
     steps:
-      - name: 📥 Checkout code
+      - name:  Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔐 Configure AWS credentials
+      - name:  Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -367,13 +367,13 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ env.AWS_REGION }}
 
-      - name: 📋 Download task definition
+      - name:  Download task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition shopsmart-app \
+            --task-definition shopsmart-app-v2 \
             --query taskDefinition > task-definition.json
 
-      - name: 🔄 Update task definition image
+      - name:  Update task definition image
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -385,7 +385,7 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: shopsmart-service
+          service: shopsmart-service-v2
           cluster: shopsmart-cluster-${{ github.ref_name }}
           wait-for-service-stability: true
 
@@ -393,7 +393,7 @@ jobs:
         run: |
           aws ecs describe-services \
             --cluster shopsmart-cluster-${{ github.ref_name }} \
-            --services shopsmart-service \
+            --services shopsmart-service-v2 \
             --query 'services[0].status' \
             --output text
 
@@ -401,7 +401,7 @@ jobs:
         run: |
           echo "ECS Deployment Completed" >> $GITHUB_STEP_SUMMARY
           echo "- Cluster: shopsmart-cluster-${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Service: shopsmart-service" >> $GITHUB_STEP_SUMMARY
+          echo "- Service: shopsmart-service-v2" >> $GITHUB_STEP_SUMMARY
           echo "- Image: ${{ needs.build-and-push.outputs.image-uri }}:${{ needs.build-and-push.outputs.image-digest }}" >> $GITHUB_STEP_SUMMARY
 
 
@@ -431,7 +431,7 @@ jobs:
         id: ecs-endpoint
         run: |
           ALB_DNS=$(aws elbv2 describe-load-balancers \
-            --names shopsmart-alb \
+            --names shopsmart-alb-v2 \
             --query 'LoadBalancers[0].DNSName' \
             --output text 2>/dev/null || echo "N/A")
           echo "endpoint=http://$ALB_DNS" >> $GITHUB_OUTPUT
